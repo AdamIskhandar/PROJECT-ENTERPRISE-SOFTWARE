@@ -1,0 +1,162 @@
+/* Shared styles for the Doctor & Medical Service pages (same look as Manage Patients) */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+}
+
+.nav {
+    background: #2c3e50;
+    padding: 12px 25px;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    margin-right: 20px;
+}
+
+.nav a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    width: 90%;
+    margin: 40px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+}
+
+.form-container {
+    width: 450px;
+    max-width: 90%;
+    margin: 50px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+}
+
+h2 {
+    text-align: center;
+}
+
+.search-box {
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    padding: 8px;
+    width: 250px;
+}
+
+.search-box button {
+    padding: 8px 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #eee;
+}
+
+.empty {
+    text-align: center;
+    color: #777;
+}
+
+.action-link {
+    margin-right: 10px;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #0000ee;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    width: auto;
+    margin: 0;
+}
+
+.success {
+    background-color: #e8f5e9;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.error {
+    background-color: #ffebee;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+}
+
+.form-container input,
+.form-container select,
+.form-container textarea,
+.slot-form input,
+.slot-form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-container button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.back {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.slot-form {
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+    max-width: 400px;
+}
+
+.slot-form button {
+    padding: 10px 20px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.subtitle {
+    text-align: center;
+    color: #555;
+    margin-top: -10px;
+}
