@@ -1,71 +1,75 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
 <%@ page import="com.cliniccare.model.Doctor" %>
 <%@ page import="com.cliniccare.util.HtmlUtil" %>
-
 <%
-    // Filled only when the servlet sends the form back after an error
     Doctor doctor = (Doctor) request.getAttribute("doctor");
-
-    String fullName = doctor != null ? doctor.getFullName() : "";
-    String specialization = doctor != null ? doctor.getSpecialization() : "";
-    String email = doctor != null ? doctor.getEmail() : "";
-    String phone = doctor != null ? doctor.getPhone() : "";
-    String fee = doctor != null
-            ? String.format("%.2f", doctor.getConsultationFee()) : "";
+    String doctorName = doctor != null ? doctor.getDoctorName() : request.getParameter("doctorName");
+    String specialization = doctor != null ? doctor.getSpecialization() : request.getParameter("specialization");
+    String email = doctor != null ? doctor.getEmail() : request.getParameter("email");
+    String phone = doctor != null ? doctor.getPhone() : request.getParameter("phone");
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Doctor - ClinicCare</title>
-    <link rel="stylesheet" href="css/clinic.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=4">
 </head>
-
 <body>
-
-<%@ include file="nav.jspf" %>
-
+<%@ include file="nav.jsp" %>
 <div class="form-container">
-
+    <span class="eyebrow">Doctor Management</span>
     <h2>Add New Doctor</h2>
+    <p class="subtitle">Enter the doctor's information. Appointment rates are fixed by ClinicCare and are added automatically.</p>
 
     <% if (request.getAttribute("error") != null) { %>
-        <p class="error"><%= HtmlUtil.escape(request.getAttribute("error")) %></p>
+        <div class="error"><%= HtmlUtil.escape(request.getAttribute("error")) %></div>
     <% } %>
 
     <form action="addDoctor" method="post">
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Doctor Name</label>
+                <input type="text" name="doctorName" maxlength="100"
+                       value="<%= HtmlUtil.escape(doctorName) %>"
+                       placeholder="e.g. Dr. Aisyah Rahman" required>
+            </div>
 
-        <label>Full Name</label>
-        <input type="text" name="fullName" maxlength="100"
-               value="<%= HtmlUtil.escape(fullName) %>" required>
+            <div class="form-group full">
+                <label>Specialization</label>
+                <input type="text" name="specialization" maxlength="100"
+                       value="<%= HtmlUtil.escape(specialization) %>"
+                       placeholder="e.g. General Medicine" required>
+            </div>
 
-        <label>Specialization</label>
-        <input type="text" name="specialization" maxlength="100"
-               value="<%= HtmlUtil.escape(specialization) %>" required>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" maxlength="100"
+                       value="<%= HtmlUtil.escape(email) %>"
+                       placeholder="doctor@cliniccare.com">
+            </div>
 
-        <label>Email</label>
-        <input type="email" name="email" maxlength="100"
-               value="<%= HtmlUtil.escape(email) %>" required>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" maxlength="20"
+                       pattern="[0-9]{10,12}"
+                       value="<%= HtmlUtil.escape(phone) %>"
+                       title="Phone number must contain 10 to 12 digits"
+                       placeholder="0123456789">
+            </div>
+        </div>
 
-        <label>Phone Number</label>
-        <input type="text" name="phone"
-               pattern="[0-9]{10,12}"
-               title="Phone number must contain 10 to 12 digits"
-               value="<%= HtmlUtil.escape(phone) %>">
+        <div class="info-card" style="margin-top:18px;">
+            <strong>Fixed Clinic Rates</strong>
+            <div class="muted" style="margin-top:6px;">Morning: RM60.00/hour · Night: RM90.00/hour</div>
+        </div>
 
-        <label>Consultation Fee (RM)</label>
-        <input type="number" name="consultationFee"
-               min="0" step="0.01"
-               value="<%= HtmlUtil.escape(fee) %>" required>
-
-        <button type="submit">Add Doctor</button>
-
+        <div class="form-actions">
+            <button type="submit">Add Doctor</button>
+            <a class="button" href="manageDoctors">Cancel</a>
+        </div>
     </form>
-
-    <p class="back"><a href="manageDoctors">Back to Manage Doctors</a></p>
-
 </div>
-
 </body>
 </html>

@@ -2,122 +2,92 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.cliniccare.model.Appointment" %>
 <%@ page import="com.cliniccare.model.ScheduleOption" %>
-
+<%@ page import="com.cliniccare.util.HtmlUtil" %>
 <%
-    Appointment appointment =
-            (Appointment) request.getAttribute("appointment");
-    List<ScheduleOption> schedules =
-            (List<ScheduleOption>) request.getAttribute("schedules");
+    Appointment appointment = (Appointment) request.getAttribute("appointment");
+    List<ScheduleOption> schedules = (List<ScheduleOption>) request.getAttribute("schedules");
+    if (appointment == null) { response.sendRedirect("manageAppointments"); return; }
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Appointment - ClinicCare</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; }
-        .container { width: 680px; max-width: 92%; margin: 40px auto; background: white; padding: 28px; border-radius: 10px; box-sizing: border-box; }
-        h2 { text-align: center; margin-top: 0; }
-        label { display: block; font-weight: bold; margin-top: 14px; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
-        textarea { min-height: 90px; resize: vertical; }
-        button, .button { display: inline-block; padding: 10px 16px; margin-top: 18px; border: 0; cursor: pointer; text-decoration: none; }
-        button { background: #222; color: white; }
-        .button { background: #eee; color: #222; }
-        .error { background: #ffebee; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
-        .info { background: #eef7ff; padding: 14px; margin-top: 16px; border-radius: 6px; line-height: 1.6; }
-        .status { background: #f6f6f6; padding: 10px; border-radius: 5px; }
-    </style>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=3">
 </head>
 <body>
-<div class="container">
-
+<div class="form-container" style="width:min(760px,92%);">
+    <span class="eyebrow">Appointment #<%= appointment.getAppointmentId() %></span>
     <h2>Edit Appointment</h2>
+    <p class="subtitle">Current status: <span class="status-badge status-<%= appointment.getStatus() %>"><%= HtmlUtil.escape(appointment.getStatus()) %></span></p>
 
-    <% if (request.getAttribute("error") != null) { %>
-        <div class="error"><%= request.getAttribute("error") %></div>
-    <% } %>
+    <% if (request.getAttribute("error") != null) { %><div class="error"><%= HtmlUtil.escape(request.getAttribute("error")) %></div><% } %>
 
-    <% if (appointment != null) { %>
-
-        <div class="status">
-            Appointment #<%= appointment.getAppointmentId() %> —
-            Status: <strong><%= appointment.getStatus() %></strong>
-        </div>
-
-        <form action="editAppointment" method="post">
-
-            <input type="hidden" name="appointmentId" value="<%= appointment.getAppointmentId() %>">
-
+    <form action="editAppointment" method="post">
+        <input type="hidden" name="appointmentId" value="<%= appointment.getAppointmentId() %>">
+        <div class="form-group">
             <label>Patient ID</label>
             <input type="number" name="patientId" min="1" value="<%= appointment.getPatientId() %>" required>
+        </div>
 
+        <div class="form-group" style="margin-top:16px;">
             <label>Doctor Schedule</label>
             <select name="scheduleId" id="scheduleId" required onchange="showScheduleDetails()">
-                <% if (schedules != null) {
-                    for (ScheduleOption schedule : schedules) { %>
-                        <option
-                                value="<%= schedule.getScheduleId() %>"
-                                data-doctor="<%= schedule.getDoctorName() %>"
-                                data-specialization="<%= schedule.getSpecialization() %>"
-                                data-date="<%= schedule.getAvailableDate() %>"
-                                data-start="<%= schedule.getStartTime() %>"
-                                data-end="<%= schedule.getEndTime() %>"
-                                data-rate-type="<%= schedule.getRateType() %>"
-                                data-rate="<%= schedule.getRateUsed() %>"
-                                data-duration="<%= schedule.getDurationHours() %>"
-                                data-charge="<%= schedule.getEstimatedCharge() %>"
-                                <%= schedule.getScheduleId() == appointment.getScheduleId() ? "selected" : "" %>>
-                            <%= schedule.getAvailableDate() %>
-                            | <%= schedule.getStartTime() %> - <%= schedule.getEndTime() %>
-                            | Dr. <%= schedule.getDoctorName() %>
-                            (<%= schedule.getSpecialization() %>)
-                        </option>
-                <%  }
-                   } %>
+                <% if (schedules != null) { for (ScheduleOption schedule : schedules) { %>
+                    <option value="<%= schedule.getScheduleId() %>"
+                            data-doctor="<%= HtmlUtil.escape(schedule.getDoctorName()) %>"
+                            data-specialization="<%= HtmlUtil.escape(schedule.getSpecialization()) %>"
+                            data-date="<%= schedule.getAvailableDate() %>"
+                            data-start="<%= schedule.getStartTime() %>"
+                            data-end="<%= schedule.getEndTime() %>"
+                            data-rate-type="<%= HtmlUtil.escape(schedule.getRateType()) %>"
+                            data-rate="<%= schedule.getRateUsed() %>"
+                            data-duration="<%= schedule.getDurationHours() %>"
+                            data-charge="<%= schedule.getEstimatedCharge() %>"
+                            <%= schedule.getScheduleId() == appointment.getScheduleId() ? "selected" : "" %>>
+                        <%= schedule.getAvailableDate() %> · <%= schedule.getStartTime() %>–<%= schedule.getEndTime() %> · <%= HtmlUtil.escape(schedule.getDoctorName()) %> (<%= HtmlUtil.escape(schedule.getSpecialization()) %>)
+                    </option>
+                <% } } %>
             </select>
+        </div>
 
-            <div class="info" id="scheduleInfo">
-                <strong>Recalculated Appointment Charge</strong><br>
-                Doctor: <span id="doctorText"></span><br>
-                Date/Time: <span id="dateTimeText"></span><br>
-                Rate Type: <span id="rateTypeText"></span><br>
-                Rate Used: RM <span id="rateText"></span> per hour<br>
-                Duration: <span id="durationText"></span> hour(s)<br>
-                <strong>Total Charge: RM <span id="chargeText"></span></strong>
-            </div>
+        <div class="calculation-box" id="scheduleInfo">
+            <strong>Recalculated Charge</strong><br>
+            Doctor: <span id="doctorText"></span><br>
+            Date & Time: <span id="dateTimeText"></span><br>
+            Rate Type: <span id="rateTypeText"></span><br>
+            Hourly Rate: RM <span id="rateText"></span><br>
+            Duration: <span id="durationText"></span> hour(s)<br>
+            <strong>Total Charge: RM <span id="chargeText"></span></strong>
+        </div>
 
+        <div class="form-group" style="margin-top:16px;">
             <label>Reason for Appointment</label>
-            <textarea name="reason" maxlength="255"><%= appointment.getReason() == null ? "" : appointment.getReason() %></textarea>
+            <textarea name="reason" maxlength="255"><%= HtmlUtil.escape(appointment.getReason()) %></textarea>
+        </div>
 
+        <div class="form-actions">
             <button type="submit">Save Changes</button>
-            <a class="button" href="manageAppointments?patientId=<%= appointment.getPatientId() %>">Back</a>
-
-        </form>
-    <% } %>
-
+            <a class="button" href="manageAppointments?patientId=<%= appointment.getPatientId() %>">Cancel</a>
+        </div>
+    </form>
 </div>
 
 <script>
-    function showScheduleDetails() {
-        const select = document.getElementById('scheduleId');
-        if (!select) return;
-
-        const option = select.options[select.selectedIndex];
-        if (!option) return;
-
-        document.getElementById('doctorText').textContent =
-            'Dr. ' + option.dataset.doctor + ' (' + option.dataset.specialization + ')';
-        document.getElementById('dateTimeText').textContent =
-            option.dataset.date + ' | ' + option.dataset.start + ' - ' + option.dataset.end;
-        document.getElementById('rateTypeText').textContent = option.dataset.rateType;
-        document.getElementById('rateText').textContent = option.dataset.rate;
-        document.getElementById('durationText').textContent = option.dataset.duration;
-        document.getElementById('chargeText').textContent = option.dataset.charge;
-    }
-
-    showScheduleDetails();
+function showScheduleDetails() {
+    const select = document.getElementById('scheduleId');
+    if (!select) return;
+    const option = select.options[select.selectedIndex];
+    if (!option) return;
+    document.getElementById('doctorText').textContent = option.dataset.doctor + ' (' + option.dataset.specialization + ')';
+    document.getElementById('dateTimeText').textContent = option.dataset.date + ' · ' + option.dataset.start + '–' + option.dataset.end;
+    document.getElementById('rateTypeText').textContent = option.dataset.rateType;
+    document.getElementById('rateText').textContent = option.dataset.rate;
+    document.getElementById('durationText').textContent = option.dataset.duration;
+    document.getElementById('chargeText').textContent = option.dataset.charge;
+}
+showScheduleDetails();
 </script>
 </body>
 </html>

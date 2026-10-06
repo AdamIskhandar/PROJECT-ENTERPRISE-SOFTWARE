@@ -1,13 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
 <%@ page import="java.util.List" %>
 <%@ page import="com.cliniccare.model.Doctor" %>
 <%@ page import="com.cliniccare.util.HtmlUtil" %>
-
 <%
     List<Doctor> doctors = (List<Doctor>) request.getAttribute("doctors");
-
-    // Opened the JSP directly? Go through the servlet so the list is loaded.
     if (doctors == null) {
         response.sendRedirect("manageDoctors");
         return;
@@ -17,120 +13,84 @@
     String error = request.getParameter("error");
     String keyword = request.getParameter("keyword");
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Doctors - ClinicCare</title>
-    <link rel="stylesheet" href="css/clinic.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=4">
 </head>
-
 <body>
-
-<%@ include file="nav.jspf" %>
-
-<div class="container">
-
-    <h2>Manage Doctors</h2>
-
-    <% if ("added".equals(message)) { %>
-        <p class="success">Doctor added successfully.</p>
-    <% } %>
-
-    <% if ("updated".equals(message)) { %>
-        <p class="success">Doctor updated successfully.</p>
-    <% } %>
-
-    <% if ("deleted".equals(message)) { %>
-        <p class="success">Doctor deleted successfully.</p>
-    <% } %>
-
-    <% if ("delete".equals(error)) { %>
-        <p class="error">
-            Failed to delete doctor. The doctor may still have appointments.
-        </p>
-    <% } %>
-
-    <% if ("notfound".equals(error)) { %>
-        <p class="error">Doctor not found.</p>
-    <% } %>
-
-    <div style="margin-bottom: 20px;">
-        <a href="addDoctor.jsp">Add New Doctor</a>
+<%@ include file="nav.jsp" %>
+<div class="page">
+    <div class="page-header">
+        <div>
+            <span class="eyebrow">Doctor Records</span>
+            <h1>Manage Doctors</h1>
+            <p>Add, update, search and manage doctor schedules.</p>
+        </div>
+        <a class="btn btn-primary" href="addDoctor">+ Add Doctor</a>
     </div>
 
-    <form action="manageDoctors" method="get" class="search-box">
+    <div class="info-card" style="margin-bottom:20px;">
+        <strong>Clinic Fixed Rates</strong>
+        <div class="muted" style="margin-top:6px;">Morning: RM60.00/hour · Night: RM90.00/hour. These rates are stored automatically in the fees table for each doctor.</div>
+    </div>
 
-        <input type="text"
-               name="keyword"
-               value="<%= HtmlUtil.escape(keyword) %>"
-               placeholder="Search name, specialization, email or phone">
+    <% if ("added".equals(message)) { %><div class="success">Doctor added successfully.</div><% } %>
+    <% if ("updated".equals(message)) { %><div class="success">Doctor information updated successfully.</div><% } %>
+    <% if ("deleted".equals(message)) { %><div class="success">Doctor deleted successfully.</div><% } %>
+    <% if ("delete".equals(error)) { %><div class="error">Failed to delete doctor.</div><% } %>
+    <% if ("notfound".equals(error)) { %><div class="error">Doctor not found.</div><% } %>
 
-        <button type="submit">Search</button>
+    <div class="panel" style="padding:20px;">
+        <form action="manageDoctors" method="get" class="toolbar">
+            <input type="text" name="keyword" value="<%= HtmlUtil.escape(keyword) %>"
+                   placeholder="Search doctor name, specialization, email or phone">
+            <button type="submit">Search</button>
+            <a class="button" href="manageDoctors">Show All</a>
+        </form>
 
-        <a href="manageDoctors">Show All</a>
-
-    </form>
-
-    <table>
-
-        <tr>
-            <th>ID</th>
-            <th>Full Name</th>
-            <th>Specialization</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Fee (RM)</th>
-            <th>Action</th>
-        </tr>
-
-        <% if (doctors.isEmpty()) { %>
-
-            <tr>
-                <td colspan="7" class="empty">No doctors found.</td>
-            </tr>
-
-        <% } %>
-
-        <% for (Doctor doctor : doctors) { %>
-
-            <tr>
-                <td><%= doctor.getDoctorId() %></td>
-                <td><%= HtmlUtil.escape(doctor.getFullName()) %></td>
-                <td><%= HtmlUtil.escape(doctor.getSpecialization()) %></td>
-                <td><%= HtmlUtil.escape(doctor.getEmail()) %></td>
-                <td><%= HtmlUtil.escape(doctor.getPhone()) %></td>
-                <td><%= String.format("%.2f", doctor.getConsultationFee()) %></td>
-
-                <td>
-                    <a class="action-link"
-                       href="doctorAvailability?doctorId=<%= doctor.getDoctorId() %>">
-                        Availability
-                    </a>
-
-                    <a class="action-link"
-                       href="editDoctor?id=<%= doctor.getDoctorId() %>">
-                        Edit
-                    </a>
-
-                    <form action="deleteDoctor"
-                          method="post"
-                          class="inline-form"
-                          onsubmit="return confirm('Are you sure you want to delete this doctor?');">
-
-                        <input type="hidden" name="id"
-                               value="<%= doctor.getDoctorId() %>">
-
-                        <button type="submit" class="link-button">Delete</button>
-                    </form>
-                </td>
-            </tr>
-
-        <% } %>
-
-    </table>
-
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Contact</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <% if (doctors.isEmpty()) { %>
+                    <tr><td colspan="4" class="empty">No doctor records found.</td></tr>
+                <% } else { for (Doctor doctor : doctors) { %>
+                    <tr>
+                        <td>#<%= doctor.getDoctorId() %></td>
+                        <td>
+                            <strong><%= HtmlUtil.escape(doctor.getDoctorName()) %></strong><br>
+                            <span class="muted"><%= HtmlUtil.escape(doctor.getSpecialization()) %></span>
+                        </td>
+                        <td>
+                            <%= HtmlUtil.escape(doctor.getEmail()) %><br>
+                            <span class="muted"><%= HtmlUtil.escape(doctor.getPhone()) %></span>
+                        </td>
+                        <td>
+                            <a class="action-link" href="doctorAvailability?doctorId=<%= doctor.getDoctorId() %>">Schedules</a>
+                            <a class="action-link" href="editDoctor?id=<%= doctor.getDoctorId() %>">Edit</a>
+                            <form action="deleteDoctor" method="post" class="inline-form"
+                                  onsubmit="return confirm('Delete this doctor? Related fee and schedule records will also be removed.');">
+                                <input type="hidden" name="id" value="<%= doctor.getDoctorId() %>">
+                                <button type="submit" class="link-button">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% } } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
 </body>
 </html>

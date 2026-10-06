@@ -1,47 +1,75 @@
 package com.cliniccare.model;
 
+/**
+ * Represents one row from the doctor table.
+ */
 public class Doctor {
 
     private int doctorId;
-    private String fullName;
+    private String doctorName;
     private String specialization;
-    private String email;
     private String phone;
-    private double consultationFee;
+    private String email;
 
     public Doctor() {
     }
 
-    public Doctor(String fullName, String specialization,
-                  String email, String phone, double consultationFee) {
-        this.fullName = fullName;
+    public Doctor(String doctorName,
+                  String specialization,
+                  String phone,
+                  String email) {
+        this.doctorName = doctorName;
         this.specialization = specialization;
-        this.email = email;
         this.phone = phone;
-        this.consultationFee = consultationFee;
+        this.email = email;
     }
 
-    public Doctor(int doctorId, String fullName, String specialization,
-                  String email, String phone, double consultationFee) {
-        this(fullName, specialization, email, phone, consultationFee);
+    public Doctor(int doctorId,
+                  String doctorName,
+                  String specialization,
+                  String phone,
+                  String email) {
+        this(doctorName, specialization, phone, email);
         this.doctorId = doctorId;
     }
 
-    public int getDoctorId() { return doctorId; }
-    public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
+    public int getDoctorId() {
+        return doctorId;
+    }
 
-    public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setDoctorId(int doctorId) {
+        this.doctorId = doctorId;
+    }
 
-    public String getSpecialization() { return specialization; }
-    public void setSpecialization(String specialization) { this.specialization = specialization; }
+    public String getDoctorName() {
+        return doctorName;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getSpecialization() {
+        return specialization;
+    }
 
-    public double getConsultationFee() { return consultationFee; }
-    public void setConsultationFee(double consultationFee) { this.consultationFee = consultationFee; }
+    public void setSpecialization(String specialization) {
+        this.specialization = specialization;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }

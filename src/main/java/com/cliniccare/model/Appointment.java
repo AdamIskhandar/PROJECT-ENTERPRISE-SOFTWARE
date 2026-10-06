@@ -22,6 +22,14 @@ public class Appointment {
     private BigDecimal totalCharge;
     private String reason;
     private String status;
+    private BigDecimal morningRate;
+    private BigDecimal nightRate;
+
+    private BigDecimal morningHours;
+    private BigDecimal nightHours;
+
+    private BigDecimal morningCharge;
+    private BigDecimal nightCharge;
 
     public Appointment() {
     }
@@ -152,5 +160,76 @@ public class Appointment {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public BigDecimal getMorningRate() {
+    return morningRate;
+    }
+
+    public void setMorningRate(
+            BigDecimal morningRate) {
+
+        this.morningRate =
+                morningRate;
+    }
+
+
+    public BigDecimal getNightRate() {
+        return nightRate;
+    }
+
+    public void setNightRate(
+            BigDecimal nightRate) {
+
+        this.nightRate =
+                nightRate;
+    }
+
+
+    public BigDecimal getMorningHours() {
+        return morningHours;
+    }
+
+    public void setMorningHours(
+            BigDecimal morningHours) {
+
+        this.morningHours =
+                morningHours;
+    }
+
+
+    public BigDecimal getNightHours() {
+        return nightHours;
+    }
+
+    public void setNightHours(
+            BigDecimal nightHours) {
+
+        this.nightHours =
+                nightHours;
+    }
+
+
+    public BigDecimal getMorningCharge() {
+        return morningCharge;
+    }
+
+    public void setMorningCharge(
+            BigDecimal morningCharge) {
+
+        this.morningCharge =
+                morningCharge;
+    }
+
+
+    public BigDecimal getNightCharge() {
+        return nightCharge;
+    }
+
+    public void setNightCharge(
+            BigDecimal nightCharge) {
+
+        this.nightCharge =
+                nightCharge;
     }
 }

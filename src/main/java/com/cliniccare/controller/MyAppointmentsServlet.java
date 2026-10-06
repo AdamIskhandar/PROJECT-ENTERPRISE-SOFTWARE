@@ -2,6 +2,7 @@ package com.cliniccare.controller;
 
 import com.cliniccare.dao.AppointmentDAO;
 import com.cliniccare.model.Appointment;
+import com.cliniccare.model.Patient;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,20 +14,15 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/manageAppointments")
-public class ManageAppointmentsServlet
-        extends HttpServlet {
+@WebServlet("/myAppointments")
+public class MyAppointmentsServlet extends HttpServlet {
 
     private AppointmentDAO appointmentDAO;
 
-
     @Override
     public void init() {
-
-        appointmentDAO =
-                new AppointmentDAO();
+        appointmentDAO = new AppointmentDAO();
     }
-
 
     @Override
     protected void doGet(
@@ -34,70 +30,71 @@ public class ManageAppointmentsServlet
             HttpServletResponse response)
             throws ServletException, IOException {
 
-
         HttpSession session =
                 request.getSession(false);
 
-
         if (session == null ||
-                !"ADMIN".equals(
-                        session.getAttribute("userRole")
-                )) {
-
+                !"PATIENT".equals(
+                        session.getAttribute("userRole"))) {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/adminLogin.jsp"
+                    + "/login.jsp"
             );
-
 
             return;
         }
 
+        Patient patient =
+                (Patient) session.getAttribute(
+                        "loggedInPatient"
+                );
+
+        if (patient == null) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/login.jsp"
+            );
+
+            return;
+        }
 
         String keyword =
                 request.getParameter("keyword");
 
-
         String status =
                 request.getParameter("status");
-
 
         List<Appointment> appointments =
                 appointmentDAO.findAppointments(
                         keyword,
                         status,
-                        null
+                        patient.getPatientId()
                 );
-
 
         request.setAttribute(
                 "appointments",
                 appointments
         );
 
-
         request.setAttribute(
                 "keyword",
-                keyword == null
-                        ? ""
-                        : keyword
+                keyword == null ? "" : keyword
         );
-
 
         request.setAttribute(
                 "status",
-                status == null
-                        ? ""
-                        : status
+                status == null ? "" : status
         );
 
+        request.setAttribute(
+                "patient",
+                patient
+        );
 
         request.getRequestDispatcher(
-                "/manageAppointments.jsp"
-        ).forward(
-                request,
-                response
-        );
+                "/myAppointments.jsp"
+        ).forward(request, response);
     }
 }

@@ -3,6 +3,7 @@ package com.cliniccare.controller;
 import com.cliniccare.dao.AppointmentDAO;
 import com.cliniccare.dao.PatientDAO;
 import com.cliniccare.model.Appointment;
+import com.cliniccare.model.Patient;
 import com.cliniccare.model.ScheduleOption;
 
 import jakarta.servlet.ServletException;
@@ -10,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -27,138 +29,583 @@ public class BookAppointmentServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+    protected void doGet(
+            HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
 
-        loadSchedules(request);
-        request.setAttribute("patientId", request.getParameter("patientId"));
-        request.getRequestDispatcher("/bookAppointment.jsp")
-                .forward(request, response);
-    }
+        HttpSession session =
+                request.getSession(false);
 
-    @Override
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
-            throws ServletException, IOException {
+        String role =
+                getRole(session);
 
-        try {
-            int patientId = Integer.parseInt(request.getParameter("patientId"));
-            int scheduleId = Integer.parseInt(request.getParameter("scheduleId"));
-            String reason = cleanReason(request.getParameter("reason"));
 
-            request.setAttribute("patientId", String.valueOf(patientId));
+        // =========================
+        // PATIENT BOOKING
+        // =========================
+        if ("PATIENT".equals(role)) {
 
-            if (patientDAO.getPatientById(patientId) == null) {
-                forwardWithError(request, response, "Patient ID does not exist.");
-                return;
-            }
+            Patient patient =
+                    getLoggedInPatient(session);
 
-            ScheduleOption schedule = appointmentDAO.getScheduleById(scheduleId);
-            if (schedule == null) {
-                forwardWithError(request, response, "The selected doctor schedule is invalid.");
-                return;
-            }
+            if (patient == null) {
 
-            LocalDateTime appointmentDateTime = LocalDateTime.of(
-                    schedule.getAvailableDate(),
-                    schedule.getStartTime()
-            );
-
-            if (!appointmentDateTime.isAfter(LocalDateTime.now())) {
-                forwardWithError(request, response, "Please select a future appointment schedule.");
-                return;
-            }
-
-            if (!appointmentDAO.isScheduleAvailableForBooking(scheduleId, null)) {
-                forwardWithError(
-                        request,
-                        response,
-                        "That schedule has already been booked. Please choose another available schedule."
-                );
-                return;
-            }
-
-            Appointment appointment = buildAppointment(
-                    0,
-                    patientId,
-                    schedule,
-                    reason,
-                    "Pending"
-            );
-
-            if (appointmentDAO.addAppointment(appointment)) {
                 response.sendRedirect(
                         request.getContextPath()
-                                + "/manageAppointments?patientId="
-                                + patientId
-                                + "&message=booked"
+                        + "/login.jsp"
                 );
+
+                return;
+            }
+
+            request.setAttribute(
+                    "patientId",
+                    String.valueOf(
+                            patient.getPatientId()
+                    )
+            );
+
+            request.setAttribute(
+                    "source",
+                    "patient"
+            );
+        }
+
+
+        // =========================
+        // ADMIN BOOKING
+        // =========================
+        else if ("ADMIN".equals(role)) {
+
+            request.setAttribute(
+                    "patientId",
+                    request.getParameter("patientId")
+            );
+
+            request.setAttribute(
+                    "source",
+                    "admin"
+            );
+        }
+
+
+        // =========================
+        // NOT LOGGED IN
+        // =========================
+        else {
+
+            String source =
+                    request.getParameter("source");
+
+            if ("admin".equalsIgnoreCase(source)) {
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/adminLogin.jsp"
+                );
+
             } else {
-                forwardWithError(
-                        request,
-                        response,
-                        "Unable to book the appointment. The selected schedule may no longer be available."
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/login.jsp"
                 );
             }
 
+            return;
+        }
+
+
+        loadSchedules(request);
+
+        request.getRequestDispatcher(
+                "/bookAppointment.jsp"
+        ).forward(
+                request,
+                response
+        );
+    }
+
+
+    @Override
+    protected void doPost(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session =
+                request.getSession(false);
+
+        String role =
+                getRole(session);
+
+
+        // =========================
+        // CHECK LOGIN
+        // =========================
+
+        if (!"PATIENT".equals(role)
+                && !"ADMIN".equals(role)) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/login.jsp"
+            );
+
+            return;
+        }
+
+
+        boolean patientMode =
+                "PATIENT".equals(role);
+
+
+        try {
+
+            int patientId;
+
+
+            // =========================
+            // PATIENT
+            // =========================
+
+            if (patientMode) {
+
+                Patient patient =
+                        getLoggedInPatient(session);
+
+                if (patient == null) {
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/login.jsp"
+                    );
+
+                    return;
+                }
+
+                // Patient ID comes from session
+                patientId =
+                        patient.getPatientId();
+            }
+
+
+            // =========================
+            // ADMIN
+            // =========================
+
+            else {
+
+                patientId =
+                        Integer.parseInt(
+                                request.getParameter(
+                                        "patientId"
+                                )
+                        );
+            }
+
+
+            int scheduleId =
+                    Integer.parseInt(
+                            request.getParameter(
+                                    "scheduleId"
+                            )
+                    );
+
+
+            String reason =
+                    cleanReason(
+                            request.getParameter(
+                                    "reason"
+                            )
+                    );
+
+
+            // =========================
+            // CHECK PATIENT
+            // =========================
+
+            if (patientDAO.getPatientById(
+                    patientId) == null) {
+
+                forwardWithError(
+                        request,
+                        response,
+                        "Patient does not exist."
+                );
+
+                return;
+            }
+
+
+            // =========================
+            // GET SCHEDULE
+            // =========================
+
+            ScheduleOption schedule =
+                    appointmentDAO
+                            .getScheduleById(
+                                    scheduleId
+                            );
+
+
+            if (schedule == null) {
+
+                forwardWithError(
+                        request,
+                        response,
+                        "Invalid doctor schedule."
+                );
+
+                return;
+            }
+
+
+            // =========================
+            // CHECK DATE
+            // =========================
+
+            LocalDateTime appointmentDateTime =
+                    LocalDateTime.of(
+                            schedule.getAvailableDate(),
+                            schedule.getStartTime()
+                    );
+
+
+            if (!appointmentDateTime
+                    .isAfter(LocalDateTime.now())) {
+
+                forwardWithError(
+                        request,
+                        response,
+                        "Please select a future appointment."
+                );
+
+                return;
+            }
+
+
+            // =========================
+            // CHECK AVAILABILITY
+            // =========================
+
+            if (!appointmentDAO
+                    .isScheduleAvailableForBooking(
+                            scheduleId,
+                            null
+                    )) {
+
+                forwardWithError(
+                        request,
+                        response,
+                        "This schedule has already been booked."
+                );
+
+                return;
+            }
+
+
+            // =========================
+            // CREATE APPOINTMENT
+            // =========================
+
+            Appointment appointment =
+                    buildAppointment(
+                            0,
+                            patientId,
+                            schedule,
+                            reason,
+                            "Pending"
+                    );
+
+
+            boolean success =
+                    appointmentDAO
+                            .addAppointment(
+                                    appointment
+                            );
+
+
+            // =========================
+            // REDIRECT
+            // =========================
+
+            if (success) {
+
+                if (patientMode) {
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/myAppointments"
+                            + "?message=booked"
+                    );
+
+                } else {
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/manageAppointments"
+                            + "?message=booked"
+                    );
+                }
+
+            } else {
+
+                forwardWithError(
+                        request,
+                        response,
+                        "Unable to book appointment."
+                );
+            }
+
+
         } catch (NumberFormatException e) {
+
             forwardWithError(
                     request,
                     response,
-                    "Please enter a valid patient ID and select an available schedule."
+                    "Please select a valid schedule."
             );
         }
     }
 
-    private Appointment buildAppointment(int appointmentId,
-                                         int patientId,
-                                         ScheduleOption schedule,
-                                         String reason,
-                                         String status) {
-        Appointment appointment = new Appointment();
-        appointment.setAppointmentId(appointmentId);
-        appointment.setPatientId(patientId);
-        appointment.setScheduleId(schedule.getScheduleId());
-        appointment.setDoctorId(schedule.getDoctorId());
-        appointment.setDoctorName(schedule.getDoctorName());
-        appointment.setSpecialization(schedule.getSpecialization());
-        appointment.setAppointmentDate(schedule.getAvailableDate());
-        appointment.setStartTime(schedule.getStartTime());
-        appointment.setEndTime(schedule.getEndTime());
-        appointment.setRateType(schedule.getRateType());
-        appointment.setRateUsed(schedule.getRateUsed());
-        appointment.setDurationHours(schedule.getDurationHours());
-        appointment.setTotalCharge(schedule.getEstimatedCharge());
-        appointment.setReason(reason);
-        appointment.setStatus(status);
+
+    // =========================
+    // GET ROLE
+    // =========================
+
+    private String getRole(
+            HttpSession session) {
+
+        if (session == null) {
+            return null;
+        }
+
+        Object role =
+                session.getAttribute(
+                        "userRole"
+                );
+
+        return role == null
+                ? null
+                : role.toString();
+    }
+
+
+    // =========================
+    // GET PATIENT
+    // =========================
+
+    private Patient getLoggedInPatient(
+            HttpSession session) {
+
+        if (session == null) {
+            return null;
+        }
+
+        Object patient =
+                session.getAttribute(
+                        "loggedInPatient"
+                );
+
+        if (patient instanceof Patient) {
+
+            return (Patient) patient;
+        }
+
+        return null;
+    }
+
+
+    // =========================
+    // BUILD APPOINTMENT
+    // =========================
+
+    private Appointment buildAppointment(
+            int appointmentId,
+            int patientId,
+            ScheduleOption schedule,
+            String reason,
+            String status) {
+
+        Appointment appointment =
+                new Appointment();
+
+
+        appointment.setAppointmentId(
+                appointmentId
+        );
+
+        appointment.setPatientId(
+                patientId
+        );
+
+        appointment.setScheduleId(
+                schedule.getScheduleId()
+        );
+
+        appointment.setDoctorId(
+                schedule.getDoctorId()
+        );
+
+        appointment.setDoctorName(
+                schedule.getDoctorName()
+        );
+
+        appointment.setSpecialization(
+                schedule.getSpecialization()
+        );
+
+        appointment.setAppointmentDate(
+                schedule.getAvailableDate()
+        );
+
+        appointment.setStartTime(
+                schedule.getStartTime()
+        );
+
+        appointment.setEndTime(
+                schedule.getEndTime()
+        );
+
+        appointment.setRateType(
+                schedule.getRateType()
+        );
+
+        appointment.setRateUsed(
+                schedule.getRateUsed()
+        );
+
+        appointment.setDurationHours(
+                schedule.getDurationHours()
+        );
+
+        appointment.setTotalCharge(
+                schedule.getEstimatedCharge()
+        );
+
+        appointment.setReason(
+                reason
+        );
+
+        appointment.setStatus(
+                status
+        );
+
+
         return appointment;
     }
 
-    private void loadSchedules(HttpServletRequest request) {
-        request.setAttribute("schedules", appointmentDAO.getAvailableSchedules());
+
+    // =========================
+    // LOAD SCHEDULE
+    // =========================
+
+    private void loadSchedules(
+            HttpServletRequest request) {
+
+        request.setAttribute(
+                "schedules",
+                appointmentDAO
+                        .getAvailableSchedules()
+        );
     }
 
-    private void forwardWithError(HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  String error)
+
+    // =========================
+    // ERROR
+    // =========================
+
+    private void forwardWithError(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            String error)
             throws ServletException, IOException {
-        request.setAttribute("error", error);
+
+        HttpSession session =
+                request.getSession(false);
+
+        String role =
+                getRole(session);
+
+
+        if ("PATIENT".equals(role)) {
+
+            Patient patient =
+                    getLoggedInPatient(session);
+
+            if (patient != null) {
+
+                request.setAttribute(
+                        "patientId",
+                        String.valueOf(
+                                patient.getPatientId()
+                        )
+                );
+            }
+
+            request.setAttribute(
+                    "source",
+                    "patient"
+            );
+
+        } else if ("ADMIN".equals(role)) {
+
+            request.setAttribute(
+                    "source",
+                    "admin"
+            );
+        }
+
+
+        request.setAttribute(
+                "error",
+                error
+        );
+
+
         loadSchedules(request);
-        request.getRequestDispatcher("/bookAppointment.jsp")
-                .forward(request, response);
+
+
+        request.getRequestDispatcher(
+                "/bookAppointment.jsp"
+        ).forward(
+                request,
+                response
+        );
     }
 
-    private String cleanReason(String reason) {
+
+    // =========================
+    // CLEAN REASON
+    // =========================
+
+    private String cleanReason(
+            String reason) {
+
         if (reason == null) {
             return null;
         }
 
-        String value = reason.trim();
+        String value =
+                reason.trim();
+
+
         if (value.isEmpty()) {
             return null;
         }
 
-        return value.length() > 255 ? value.substring(0, 255) : value;
+
+        if (value.length() > 255) {
+
+            return value.substring(
+                    0,
+                    255
+            );
+        }
+
+
+        return value;
     }
 }

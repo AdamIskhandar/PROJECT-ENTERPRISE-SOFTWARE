@@ -20,6 +20,11 @@ public class ScheduleOption {
     private BigDecimal rateUsed;
     private BigDecimal durationHours;
     private BigDecimal estimatedCharge;
+    private BigDecimal morningHours;
+    private BigDecimal nightHours;
+
+    private BigDecimal morningCharge;
+    private BigDecimal nightCharge;
 
     public int getScheduleId() {
         return scheduleId;
@@ -131,5 +136,52 @@ public class ScheduleOption {
 
     public void setEstimatedCharge(BigDecimal estimatedCharge) {
         this.estimatedCharge = estimatedCharge;
+    }
+
+    public BigDecimal getMorningHours() {
+    return morningHours;
+}
+
+    public void setMorningHours(
+            BigDecimal morningHours) {
+
+        this.morningHours =
+                morningHours;
+    }
+
+
+    public BigDecimal getNightHours() {
+        return nightHours;
+    }
+
+    public void setNightHours(
+            BigDecimal nightHours) {
+
+        this.nightHours =
+                nightHours;
+    }
+
+
+    public BigDecimal getMorningCharge() {
+        return morningCharge;
+    }
+
+    public void setMorningCharge(
+            BigDecimal morningCharge) {
+
+        this.morningCharge =
+                morningCharge;
+    }
+
+
+    public BigDecimal getNightCharge() {
+        return nightCharge;
+    }
+
+    public void setNightCharge(
+            BigDecimal nightCharge) {
+
+        this.nightCharge =
+                nightCharge;
     }
 }

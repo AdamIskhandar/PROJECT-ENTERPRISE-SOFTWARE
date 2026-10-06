@@ -1,112 +1,48 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.cliniccare.model.Patient" %>
-
+<%@ page import="com.cliniccare.util.HtmlUtil" %>
 <%
-    Patient patient =
-        (Patient) request.getAttribute("patient");
-%>
-
-<%
+    Patient patient = (Patient) request.getAttribute("patient");
     String message = request.getParameter("message");
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Profile - ClinicCare</title>
-
-
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-        }
-
-        .container {
-            width: 500px;
-            margin: 50px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .row {
-            margin-bottom: 15px;
-        }
-
-        .label {
-            font-weight: bold;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 15px;
-            text-decoration: none;
-            background-color: #eee;
-            margin-top: 15px;
-        }
-    </style>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=3">
 </head>
-
 <body>
-
-<div class="container">
-
-    <h2>Patient Profile</h2>
-
-    <% if ("updated".equals(message)) { %>
-
-    <p style="text-align:center;">
-        Profile updated successfully.
-    </p>
-
-    <% } %>
-
+<div class="profile-card">
+    <% if ("updated".equals(message)) { %><div class="success">Profile updated successfully.</div><% } %>
     <% if (patient != null) { %>
-
-        <div class="row">
-            <span class="label">Patient ID:</span>
-            <%= patient.getPatientId() %>
+        <div class="profile-head">
+            <div class="avatar">P</div>
+            <div>
+                <span class="eyebrow">Patient Portal</span>
+                <h2 style="margin-bottom:3px;"><%= HtmlUtil.escape(patient.getFullName()) %></h2>
+                <div class="muted">Patient ID #<%= patient.getPatientId() %></div>
+            </div>
         </div>
 
-        <div class="row">
-            <span class="label">Full Name:</span>
-            <%= patient.getFullName() %>
+        <div class="details-grid">
+            <div class="detail"><div class="label">Email</div><div class="value"><%= HtmlUtil.escape(patient.getEmail()) %></div></div>
+            <div class="detail"><div class="label">Phone</div><div class="value"><%= HtmlUtil.escape(patient.getPhone()) %></div></div>
+            <div class="detail"><div class="label">Gender</div><div class="value"><%= HtmlUtil.escape(patient.getGender()) %></div></div>
+            <div class="detail"><div class="label">Date of Birth</div><div class="value"><%= patient.getDateOfBirth() == null ? "-" : patient.getDateOfBirth() %></div></div>
         </div>
 
-        <div class="row">
-            <span class="label">Email:</span>
-            <%= patient.getEmail() %>
+        <div class="form-actions">
+            <a class="btn btn-primary" href="bookAppointment?source=patient">Book Appointment</a>
+            <a class="button" href="myAppointments">My Appointments</a>
+            <a class="button" href="editPatient.jsp?id=<%= patient.getPatientId() %>">Edit Profile</a>
+            <a class="button" href="login.jsp">Sign Out</a>
         </div>
-
-        <div class="row">
-            <span class="label">Phone:</span>
-            <%= patient.getPhone() %>
-        </div>
-
-        <div class="row">
-            <span class="label">Gender:</span>
-            <%= patient.getGender() %>
-        </div>
-
-        <div class="row">
-            <span class="label">Date of Birth:</span>
-            <%= patient.getDateOfBirth() %>
-        </div>
-
-        <a class="button"
-           href="editPatient.jsp?id=<%= patient.getPatientId() %>">
-            Edit Profile
-        </a>
-
+    <% } else { %>
+        <div class="error">Patient information could not be loaded.</div>
+        <a class="button" href="login.jsp">Back to Login</a>
     <% } %>
-
 </div>
-
 </body>
 </html>

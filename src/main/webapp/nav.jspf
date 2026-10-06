@@ -1,5 +1,0 @@
-<div class="nav">
-    <a href="managePatients">Patients</a>
-    <a href="manageDoctors">Doctors</a>
-    <a href="manageServices">Services</a>
-</div>

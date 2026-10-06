@@ -42,9 +42,12 @@ public class AdminLoginServlet extends HttpServlet {
                         password,
                         admin.getPassword())) {
 
+            request.getSession().setAttribute("userRole", "ADMIN");
+            request.getSession().setAttribute("loggedInAdmin", admin);
+
             response.sendRedirect(
                     request.getContextPath()
-                    + "/managePatients"
+                    + "/adminDashboard.jsp"
             );
 
         } else {

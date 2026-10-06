@@ -1,138 +1,66 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.cliniccare.dao.PatientDAO" %>
 <%@ page import="com.cliniccare.model.Patient" %>
-
+<%@ page import="com.cliniccare.util.HtmlUtil" %>
 <%
     String id = request.getParameter("id");
-
-    Patient patient = null;
-
-    if (id != null) {
-
-        PatientDAO dao = new PatientDAO();
-
-        patient = dao.getPatientById(
-                Integer.parseInt(id)
-        );
+    Patient patient = (Patient) request.getAttribute("patient");
+    if (patient == null && id != null) {
+        try { patient = new PatientDAO().getPatientById(Integer.parseInt(id)); } catch (Exception ignored) {}
     }
-%>
-
-<%
     String source = request.getParameter("source");
+    if (patient == null) { response.sendRedirect("managePatients"); return; }
 %>
-
-<% if (request.getAttribute("error") != null) { %>
-
-    <p style="color:red; text-align:center;">
-        <%= request.getAttribute("error") %>
-    </p>
-
-<% } %>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Patient Profile</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-        }
-
-        .container {
-            width: 450px;
-            margin: 50px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            margin-bottom: 12px;
-            box-sizing: border-box;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            cursor: pointer;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Patient - ClinicCare</title>
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=3">
 </head>
-
 <body>
+<% if ("admin".equals(source)) { %><%@ include file="nav.jsp" %><% } %>
+<div class="form-container">
+    <span class="eyebrow">Patient Record</span>
+    <h2>Edit Patient</h2>
+    <p class="subtitle">Update patient contact and personal information.</p>
 
-<div class="container">
-
-    <h2>Edit Profile</h2>
-
-    <% if (patient != null) { %>
+    <% if (request.getAttribute("error") != null) { %><div class="error"><%= request.getAttribute("error") %></div><% } %>
 
     <form action="updatePatient" method="post">
-
-        <input type="hidden"
-               name="patientId"
-               value="<%= patient.getPatientId() %>">
-
-        <input type="hidden"
-                name="source"
-                value="<%= source != null ? source : "patient" %>">
-
-        <label>Full Name</label>
-        <input type="text"
-               name="fullName"
-               value="<%= patient.getFullName() %>"
-               required>
-
-        <label>Email</label>
-        <input type="email"
-               name="email"
-               value="<%= patient.getEmail() %>"
-               required>
-
-        <label>Phone</label>
-        <input type="text"
-               name="phone"
-               value="<%= patient.getPhone() %>">
-
-        <label>Gender</label>
-
-        <select name="gender">
-
-            <option value="Male"
-                <%= "Male".equals(patient.getGender())
-                    ? "selected" : "" %>>
-                Male
-            </option>
-
-            <option value="Female"
-                <%= "Female".equals(patient.getGender())
-                    ? "selected" : "" %>>
-                Female
-            </option>
-
-        </select>
-
-        <label>Date of Birth</label>
-
-        <input type="date"
-               name="dateOfBirth"
-               value="<%= patient.getDateOfBirth() %>">
-
-        <button type="submit">
-            Update Profile
-        </button>
-
+        <input type="hidden" name="patientId" value="<%= patient.getPatientId() %>">
+        <input type="hidden" name="source" value="<%= source != null ? source : "patient" %>">
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Full Name</label>
+                <input type="text" name="fullName" maxlength="100" value="<%= HtmlUtil.escape(patient.getFullName()) %>" required>
+            </div>
+            <div class="form-group full">
+                <label>Email Address</label>
+                <input type="email" name="email" maxlength="100" value="<%= HtmlUtil.escape(patient.getEmail()) %>" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" pattern="[0-9]{10,12}" value="<%= HtmlUtil.escape(patient.getPhone()) %>">
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender" required>
+                    <option value="Male" <%= "Male".equals(patient.getGender()) ? "selected" : "" %>>Male</option>
+                    <option value="Female" <%= "Female".equals(patient.getGender()) ? "selected" : "" %>>Female</option>
+                </select>
+            </div>
+            <div class="form-group full">
+                <label>Date of Birth</label>
+                <input type="date" name="dateOfBirth" max="<%= java.time.LocalDate.now() %>" value="<%= patient.getDateOfBirth() == null ? "" : patient.getDateOfBirth() %>">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Save Changes</button>
+            <a class="button" href="<%= "admin".equals(source) ? "managePatients" : "patientProfile?id=" + patient.getPatientId() %>">Cancel</a>
+        </div>
     </form>
-
-    <% } %>
-
 </div>
-
 </body>
 </html>

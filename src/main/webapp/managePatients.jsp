@@ -1,236 +1,70 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
 <%@ page import="java.util.List" %>
 <%@ page import="com.cliniccare.model.Patient" %>
-
+<%@ page import="com.cliniccare.util.HtmlUtil" %>
 <%
-    List<Patient> patients =
-        (List<Patient>) request.getAttribute("patients");
+    List<Patient> patients = (List<Patient>) request.getAttribute("patients");
+    String message = request.getParameter("message");
+    String error = request.getParameter("error");
+    String keyword = request.getParameter("keyword");
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Patients - ClinicCare</title>
-
-    <style>
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-        }
-
-        .container {
-            width: 90%;
-            margin: 40px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .search-box {
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            padding: 8px;
-            width: 250px;
-        }
-
-        .search-box button {
-            padding: 8px 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #eee;
-        }
-
-        .action-link {
-            margin-right: 10px;
-        }
-
-        .success {
-            background-color: #e8f5e9;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        .error {
-            background-color: #ffebee;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-    </style>
-
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=3">
 </head>
-
 <body>
-
-<div class="container">
-
-    <%
-        String message = request.getParameter("message");
-        String error = request.getParameter("error");
-    %>
-
-    <h2>Manage Patients</h2>
-
-    <% if ("added".equals(message)) { %>
-
-    <p class="success">
-        Patient added successfully.
-    </p>
-
-    <% } %>
-
-
-    <% if ("updated".equals(message)) { %>
-
-        <p class="success">
-            Patient updated successfully.
-        </p>
-
-    <% } %>
-
-
-    <% if ("deleted".equals(message)) { %>
-
-        <p class="success">
-            Patient deleted successfully.
-        </p>
-
-    <% } %>
-
-
-    <% if ("update".equals(error)) { %>
-
-        <p class="error">
-            Failed to update patient.
-        </p>
-
-    <% } %>
-
-
-    <% if ("delete".equals(error)) { %>
-
-        <p class="error">
-            Failed to delete patient.
-        </p>
-
-    <% } %>
-
-    <form action="managePatients"
-          method="get"
-          class="search-box">
-
-        <div style="margin-bottom: 20px;">
-            <a href="addPatient.jsp">
-                Add New Patient
-            </a>
+<%@ include file="nav.jsp" %>
+<div class="page">
+    <div class="page-header">
+        <div>
+            <span class="eyebrow">Patient Records</span>
+            <h1>Manage Patients</h1>
+            <p>Create, search and maintain patient information.</p>
         </div>
+        <a class="btn btn-primary" href="addPatient.jsp">+ Add Patient</a>
+    </div>
 
-        <input type="text"
-               name="keyword"
-               placeholder="Search name, email or phone">
+    <% if ("added".equals(message)) { %><div class="success">Patient added successfully.</div><% } %>
+    <% if ("updated".equals(message)) { %><div class="success">Patient updated successfully.</div><% } %>
+    <% if ("deleted".equals(message)) { %><div class="success">Patient deleted successfully.</div><% } %>
+    <% if ("update".equals(error)) { %><div class="error">Failed to update patient.</div><% } %>
+    <% if ("delete".equals(error)) { %><div class="error">Failed to delete patient.</div><% } %>
 
-        <button type="submit">
-            Search
-        </button>
+    <div class="panel" style="padding:20px;">
+        <form action="managePatients" method="get" class="toolbar">
+            <input type="text" name="keyword" value="<%= HtmlUtil.escape(keyword) %>" placeholder="Search by name, email or phone">
+            <button type="submit">Search</button>
+            <a class="button" href="managePatients">Show All</a>
+        </form>
 
-        <a href="managePatients">
-            Show All
-        </a>
-
-    </form>
-
-    <table>
-
-        <tr>
-            <th>ID</th>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Gender</th>
-            <th>Date of Birth</th>
-            <th>Action</th>
-        </tr>
-
-        <% if (patients != null) { %>
-
-            <% for (Patient patient : patients) { %>
-
-                <tr>
-
-                    <td>
-                        <%= patient.getPatientId() %>
-                    </td>
-
-                    <td>
-                        <%= patient.getFullName() %>
-                    </td>
-
-                    <td>
-                        <%= patient.getEmail() %>
-                    </td>
-
-                    <td>
-                        <%= patient.getPhone() %>
-                    </td>
-
-                    <td>
-                        <%= patient.getGender() %>
-                    </td>
-
-                    <td>
-                        <%= patient.getDateOfBirth() %>
-                    </td>
-
-                    <td>
-
-                        <a class="action-link"
-                           href="editPatient.jsp?id=<%= patient.getPatientId() %>&source=admin">
-                            Edit
-                        </a>
-
-                        <a class="action-link"
-                           href="deletePatient?id=<%= patient.getPatientId() %>"
-                           onclick="return confirm('Are you sure you want to delete this patient?');">
-                            Delete
-                        </a>
-
-                    </td>
-
-                </tr>
-
-            <% } %>
-
-        <% } %>
-
-    </table>
-
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>ID</th><th>Full Name</th><th>Email</th><th>Phone</th><th>Gender</th><th>Date of Birth</th><th>Actions</th></tr></thead>
+                <tbody>
+                <% if (patients == null || patients.isEmpty()) { %>
+                    <tr><td colspan="7" class="empty">No patient records found.</td></tr>
+                <% } else { for (Patient patient : patients) { %>
+                    <tr>
+                        <td>#<%= patient.getPatientId() %></td>
+                        <td><strong><%= HtmlUtil.escape(patient.getFullName()) %></strong></td>
+                        <td><%= HtmlUtil.escape(patient.getEmail()) %></td>
+                        <td><%= HtmlUtil.escape(patient.getPhone()) %></td>
+                        <td><%= HtmlUtil.escape(patient.getGender()) %></td>
+                        <td><%= patient.getDateOfBirth() == null ? "-" : patient.getDateOfBirth() %></td>
+                        <td>
+                            <a class="action-link" href="editPatient.jsp?id=<%= patient.getPatientId() %>&source=admin">Edit</a>
+                            <a class="action-link" style="color:var(--danger);" href="deletePatient?id=<%= patient.getPatientId() %>" onclick="return confirm('Are you sure you want to delete this patient?');">Delete</a>
+                        </td>
+                    </tr>
+                <% } } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
 </body>
 </html>

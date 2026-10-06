@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -19,7 +20,9 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     public void init() {
-        patientDAO = new PatientDAO();
+
+        patientDAO =
+                new PatientDAO();
     }
 
     @Override
@@ -28,19 +31,53 @@ public class LoginServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+
         String email =
                 request.getParameter("email");
+
 
         String password =
                 request.getParameter("password");
 
+
         Patient patient =
                 patientDAO.getPatientByEmail(email);
+
 
         if (patient != null &&
                 PasswordUtil.checkPassword(
                         password,
-                        patient.getPassword())) {
+                        patient.getPassword()
+                )) {
+
+
+            // Remove previous admin login
+            HttpSession oldSession =
+                    request.getSession(false);
+
+
+            if (oldSession != null) {
+
+                oldSession.invalidate();
+            }
+
+
+            // Create patient login
+            HttpSession session =
+                    request.getSession(true);
+
+
+            session.setAttribute(
+                    "userRole",
+                    "PATIENT"
+            );
+
+
+            session.setAttribute(
+                    "loggedInPatient",
+                    patient
+            );
+
 
             response.sendRedirect(
                     request.getContextPath()
@@ -48,16 +85,23 @@ public class LoginServlet extends HttpServlet {
                     + patient.getPatientId()
             );
 
+
         } else {
+
 
             request.setAttribute(
                     "error",
                     "Invalid email or password."
             );
 
+
             request.getRequestDispatcher(
                     "login.jsp"
-            ).forward(request, response);
+            ).forward(
+                    request,
+                    response
+            );
+
         }
     }
 }

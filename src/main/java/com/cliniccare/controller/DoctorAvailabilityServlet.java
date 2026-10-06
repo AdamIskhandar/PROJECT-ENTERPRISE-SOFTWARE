@@ -1,11 +1,11 @@
 package com.cliniccare.controller;
 
-import com.cliniccare.dao.DoctorAvailabilityDAO;
-import com.cliniccare.dao.DoctorAvailabilityDAOImpl;
 import com.cliniccare.dao.DoctorDAO;
 import com.cliniccare.dao.DoctorDAOImpl;
+import com.cliniccare.dao.SchedulingDAO;
+import com.cliniccare.dao.SchedulingDAOImpl;
 import com.cliniccare.model.Doctor;
-import com.cliniccare.model.DoctorAvailability;
+import com.cliniccare.model.Scheduling;
 import com.cliniccare.util.FormUtil;
 
 import jakarta.servlet.ServletException;
@@ -15,66 +15,54 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
 
 @WebServlet("/doctorAvailability")
 public class DoctorAvailabilityServlet extends HttpServlet {
 
-    private static final List<String> DAYS = Arrays.asList(
-            "Monday", "Tuesday", "Wednesday", "Thursday",
-            "Friday", "Saturday", "Sunday");
-
     private DoctorDAO doctorDAO;
-    private DoctorAvailabilityDAO availabilityDAO;
+    private SchedulingDAO schedulingDAO;
 
     @Override
     public void init() {
         doctorDAO = new DoctorDAOImpl();
-        availabilityDAO = new DoctorAvailabilityDAOImpl();
+        schedulingDAO = new SchedulingDAOImpl();
     }
 
-    // Show one doctor's availability slots
     @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doGet(HttpServletRequest request,
+                         HttpServletResponse response)
             throws ServletException, IOException {
 
         int doctorId = FormUtil.parseId(request.getParameter("doctorId"));
-
         Doctor doctor = doctorDAO.getById(doctorId);
 
         if (doctor == null) {
-
             response.sendRedirect(
                     request.getContextPath() + "/manageDoctors?error=notfound");
-
             return;
         }
 
         request.setAttribute("doctor", doctor);
-        request.setAttribute("slots", availabilityDAO.getByDoctor(doctorId));
-
-        request.getRequestDispatcher("doctorAvailability.jsp")
+        request.setAttribute("slots", schedulingDAO.getByDoctor(doctorId));
+        request.getRequestDispatcher("/doctorAvailability.jsp")
                 .forward(request, response);
     }
 
-    // Add or delete a slot
     @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response)
+    protected void doPost(HttpServletRequest request,
+                          HttpServletResponse response)
             throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
 
         int doctorId = FormUtil.parseId(request.getParameter("doctorId"));
 
         if (doctorDAO.getById(doctorId) == null) {
-
             response.sendRedirect(
                     request.getContextPath() + "/manageDoctors?error=notfound");
-
             return;
         }
 
@@ -83,54 +71,61 @@ public class DoctorAvailabilityServlet extends HttpServlet {
 
         String action = request.getParameter("action");
 
-        // =========================
-        // DELETE SLOT
-        // =========================
         if ("delete".equals(action)) {
-
-            int slotId = FormUtil.parseId(request.getParameter("availabilityId"));
-
-            boolean success = slotId > 0 && availabilityDAO.deleteSlot(slotId);
+            int scheduleId = FormUtil.parseId(request.getParameter("scheduleId"));
+            boolean success = scheduleId > 0
+                    && schedulingDAO.deleteSchedule(scheduleId);
 
             response.sendRedirect(base
-                    + (success ? "&message=deleted" : "&error=failed"));
-
+                    + (success ? "&message=deleted" : "&error=delete"));
             return;
         }
 
-        // =========================
-        // ADD SLOT
-        // =========================
-        String day = request.getParameter("dayOfWeek");
-
-        LocalTime start;
-        LocalTime end;
+        LocalDate availableDate;
+        LocalTime startTime;
+        LocalTime endTime;
 
         try {
-            start = LocalTime.parse(request.getParameter("startTime"));
-            end = LocalTime.parse(request.getParameter("endTime"));
+            availableDate = LocalDate.parse(request.getParameter("availableDate"));
+            startTime = LocalTime.parse(request.getParameter("startTime"));
+            endTime = LocalTime.parse(request.getParameter("endTime"));
         } catch (Exception e) {
             response.sendRedirect(base + "&error=invalid");
             return;
         }
 
-        if (day == null || !DAYS.contains(day)) {
-            response.sendRedirect(base + "&error=invalid");
-            return;
-        }
-
-        if (!end.isAfter(start)) {
+        if (!endTime.isAfter(startTime)) {
             response.sendRedirect(base + "&error=time");
             return;
         }
 
-        if (availabilityDAO.hasOverlap(doctorId, day, start, end)) {
+        if (availableDate.isBefore(LocalDate.now())) {
+            response.sendRedirect(base + "&error=past");
+            return;
+        }
+
+        if (availableDate.equals(LocalDate.now())
+                && !LocalDateTime.of(availableDate, startTime)
+                .isAfter(LocalDateTime.now())) {
+            response.sendRedirect(base + "&error=past");
+            return;
+        }
+
+        if (schedulingDAO.hasOverlap(
+                doctorId, availableDate, startTime, endTime)) {
             response.sendRedirect(base + "&error=overlap");
             return;
         }
 
-        boolean success = availabilityDAO.addSlot(
-                new DoctorAvailability(doctorId, day, start, end));
+        Scheduling schedule = new Scheduling(
+                doctorId,
+                availableDate,
+                startTime,
+                endTime,
+                "Available"
+        );
+
+        boolean success = schedulingDAO.addSchedule(schedule);
 
         response.sendRedirect(base
                 + (success ? "&message=added" : "&error=failed"));

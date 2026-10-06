@@ -1,71 +1,73 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
 <%@ page import="com.cliniccare.model.Doctor" %>
 <%@ page import="com.cliniccare.util.HtmlUtil" %>
-
 <%
     Doctor doctor = (Doctor) request.getAttribute("doctor");
-
-    // Opened directly without an id? Go back to the list.
     if (doctor == null) {
         response.sendRedirect("manageDoctors");
         return;
     }
 %>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Doctor - ClinicCare</title>
-    <link rel="stylesheet" href="css/clinic.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/clinic.css?v=4">
 </head>
-
 <body>
-
-<%@ include file="nav.jspf" %>
-
+<%@ include file="nav.jsp" %>
 <div class="form-container">
-
+    <span class="eyebrow">Doctor Management</span>
     <h2>Edit Doctor</h2>
+    <p class="subtitle">Update doctor details only. Clinic appointment rates remain fixed.</p>
 
     <% if (request.getAttribute("error") != null) { %>
-        <p class="error"><%= HtmlUtil.escape(request.getAttribute("error")) %></p>
+        <div class="error"><%= HtmlUtil.escape(request.getAttribute("error")) %></div>
     <% } %>
 
     <form action="updateDoctor" method="post">
-
         <input type="hidden" name="doctorId" value="<%= doctor.getDoctorId() %>">
 
-        <label>Full Name</label>
-        <input type="text" name="fullName" maxlength="100"
-               value="<%= HtmlUtil.escape(doctor.getFullName()) %>" required>
+        <div class="form-grid">
+            <div class="form-group full">
+                <label>Doctor Name</label>
+                <input type="text" name="doctorName" maxlength="100"
+                       value="<%= HtmlUtil.escape(doctor.getDoctorName()) %>" required>
+            </div>
 
-        <label>Specialization</label>
-        <input type="text" name="specialization" maxlength="100"
-               value="<%= HtmlUtil.escape(doctor.getSpecialization()) %>" required>
+            <div class="form-group full">
+                <label>Specialization</label>
+                <input type="text" name="specialization" maxlength="100"
+                       value="<%= HtmlUtil.escape(doctor.getSpecialization()) %>" required>
+            </div>
 
-        <label>Email</label>
-        <input type="email" name="email" maxlength="100"
-               value="<%= HtmlUtil.escape(doctor.getEmail()) %>" required>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" maxlength="100"
+                       value="<%= HtmlUtil.escape(doctor.getEmail()) %>">
+            </div>
 
-        <label>Phone Number</label>
-        <input type="text" name="phone"
-               pattern="[0-9]{10,12}"
-               title="Phone number must contain 10 to 12 digits"
-               value="<%= HtmlUtil.escape(doctor.getPhone()) %>">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" maxlength="20"
+                       pattern="[0-9]{10,12}"
+                       value="<%= HtmlUtil.escape(doctor.getPhone()) %>"
+                       title="Phone number must contain 10 to 12 digits">
+            </div>
+        </div>
 
-        <label>Consultation Fee (RM)</label>
-        <input type="number" name="consultationFee"
-               min="0" step="0.01"
-               value="<%= String.format("%.2f", doctor.getConsultationFee()) %>" required>
+        <div class="info-card" style="margin-top:18px;">
+            <strong>Fixed Clinic Rates</strong>
+            <div class="muted" style="margin-top:6px;">Morning: RM60.00/hour · Night: RM90.00/hour</div>
+        </div>
 
-        <button type="submit">Update Doctor</button>
-
+        <div class="form-actions">
+            <button type="submit">Save Doctor</button>
+            <a class="button" href="manageDoctors">Cancel</a>
+        </div>
     </form>
-
-    <p class="back"><a href="manageDoctors">Back to Manage Doctors</a></p>
-
 </div>
-
 </body>
 </html>
